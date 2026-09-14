@@ -1,0 +1,74 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: thaw
+      POSTGRES_PASSWORD: thawpass
+      POSTGRES_DB: thaw
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U thaw -d thaw"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  api:
+    build: ./api
+    environment:
+      DATABASE_URL: postgresql+psycopg://thaw:thawpass@db:5432/thaw
+    ports:
+      # Host port overridable: API_PORT=9000 docker compose up web
+      - "${API_PORT:-8000}:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - "CMD"
+        - "python"
+        - "-c"
+        - "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health').status == 200 else 1)"
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  web:
+    build: ./web
+    ports:
+      # Host port overridable: WEB_PORT=9090 docker compose up web
+      - "${WEB_PORT:-8080}:80"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:80/ || exit 1"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  # One-shot acceptance service: runs pytest, Vitest and Playwright against
+  # the real Compose stack (nginx web -> FastAPI api -> PostgreSQL db).
+  # Usage: docker compose build verify && docker compose run --rm verify
+  verify:
+    build:
+      context: .
+      dockerfile: verify/Dockerfile
+    environment:
+      API_BASE_URL: http://api:8000
+      PLAYWRIGHT_BASE_URL: http://web:80
+      # pytest exercises the real FastAPI app against the real PostgreSQL.
+      DATABASE_URL: postgresql+psycopg://thaw:thawpass@db:5432/thaw
+    depends_on:
+      db:
+        condition: service_healthy
+      api:
+        condition: service_healthy
+      web:
+        condition: service_healthy
+    volumes:
+      - pw-report:/workspace/web/playwright-report
+
+volumes:
+  pgdata:
+  pw-report:
