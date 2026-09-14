@@ -48,12 +48,20 @@ describe("formatMinutes", () => {
 });
 
 describe("offset list", () => {
-  it("covers -12:00 through +14:00 in 30 minute steps", () => {
+  it("covers -12:00 through +14:00 in 15 minute steps", () => {
     expect(OFFSETS[0]).toBe("-12:00");
     expect(OFFSETS[OFFSETS.length - 1]).toBe("+14:00");
     expect(OFFSETS).toContain("+00:00");
+    // Half-hour zones (India, Newfoundland, Iran, ...)
     expect(OFFSETS).toContain("+05:30");
-    expect(OFFSETS.length).toBe(53);
+    expect(OFFSETS).toContain("-03:30");
+    // Quarter-hour zones that a 30-minute list would wrongly omit
+    expect(OFFSETS).toContain("+05:45"); // Nepal
+    expect(OFFSETS).toContain("+08:45"); // Eucla (Australia)
+    expect(OFFSETS).toContain("+12:45"); // Chatham Islands
+    expect(OFFSETS).toContain("-09:30"); // Marquesas
+    // 26 hours at 15-minute resolution, both ends inclusive: 105 entries
+    expect(OFFSETS.length).toBe(105);
   });
 });
 

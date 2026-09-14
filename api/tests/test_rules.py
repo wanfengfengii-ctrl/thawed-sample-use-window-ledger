@@ -93,6 +93,26 @@ def test_wall_clock_earlier_but_utc_later_is_legal():
     assert out["elapsed_seconds"] == 10800
 
 
+def test_quarter_hour_offset_nepal_converts_correctly():
+    # Real zones live on quarter hours: 13:00 at +05:45 (Nepal) is 07:15Z,
+    # and 08:00Z written in a different offset notation is still 2700s later.
+    from datetime import datetime, timezone
+
+    out = judge(
+        "2026-09-14T13:00:00+05:45",
+        "2026-09-14T08:00:00Z",
+        category="STANDARD",
+    )
+    assert out["thaw_completed_at_utc"] == datetime(
+        2026, 9, 14, 7, 15, tzinfo=timezone.utc
+    )
+    assert out["planned_use_at_utc"] == datetime(
+        2026, 9, 14, 8, 0, tzinfo=timezone.utc
+    )
+    assert out["elapsed_seconds"] == 2700
+    assert out["result"] == "ELIGIBLE"
+
+
 # ---------- windows, closed endpoints ----------
 
 @pytest.mark.parametrize(

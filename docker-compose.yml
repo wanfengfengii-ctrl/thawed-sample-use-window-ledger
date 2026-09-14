@@ -28,7 +28,7 @@ services:
         - "CMD"
         - "python"
         - "-c"
-        - "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health').status == 200 else 1)"
+        - "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/health').status == 200 else 1)"
       interval: 3s
       timeout: 3s
       retries: 20
@@ -42,7 +42,9 @@ services:
       api:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:80/ || exit 1"]
+      # Pin to the IPv4 loopback: busybox wget resolves localhost to ::1 and
+      # never falls back, which would leave the service permanently unhealthy.
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:80/ || exit 1"]
       interval: 3s
       timeout: 3s
       retries: 20

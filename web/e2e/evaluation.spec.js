@@ -103,6 +103,32 @@ test("wall-clock trap: mixed offsets resolving to the same instant is 0 seconds"
   );
 });
 
+test("quarter-hour zone +05:45 (Nepal) is selectable and adjudicated in UTC", async ({ page }) => {
+  // 13:00 at +05:45 is 07:15Z; 13:45 at +05:45 is 08:00Z: 2700s, exactly the
+  // STANDARD lower endpoint. selectOption would fail if the option were absent.
+  await submit(page, {
+    batch: `E2E-NPT-${RUN}`,
+    category: "STANDARD",
+    thaw: "2026-09-14T13:00",
+    planned: "2026-09-14T13:45",
+    thawOffset: "+05:45",
+    plannedOffset: "+05:45",
+  });
+
+  await expect(page.getByTestId("detail-result")).toHaveText(/ELIGIBLE/);
+  await expect(page.getByTestId("detail-elapsed-seconds")).toHaveText("2700");
+  await expect(page.getByTestId("detail-minutes")).toHaveText("45.00");
+  await expect(page.getByTestId("detail-thaw-raw")).toHaveText(
+    "2026-09-14T13:00:00+05:45"
+  );
+  await expect(page.getByTestId("detail-thaw-utc")).toHaveText(
+    "2026-09-14T07:15:00Z"
+  );
+  await expect(page.getByTestId("detail-planned-utc")).toHaveText(
+    "2026-09-14T08:00:00Z"
+  );
+});
+
 test("illegal planned time (>24h) shows a clear error and leaves no record", async ({ page, request }) => {
   const batch = `E2E-BAD24H-${RUN}`;
   const before = await request.get(`/api/evaluations?batch_code=${batch}`);

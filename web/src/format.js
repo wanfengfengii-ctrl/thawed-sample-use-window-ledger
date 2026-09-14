@@ -5,10 +5,11 @@ function pad2(value) {
   return String(value).padStart(2, "0");
 }
 
-// UTC offsets from -12:00 to +14:00 in 30-minute steps.
+// UTC offsets from -12:00 to +14:00 in 15-minute steps. Real zones live on
+// quarter hours (e.g. +05:45 Nepal, +08:45 Eucla, +12:45 Chatham).
 export const OFFSETS = (() => {
   const values = [];
-  for (let minutes = -12 * 60; minutes <= 14 * 60; minutes += 30) {
+  for (let minutes = -12 * 60; minutes <= 14 * 60; minutes += 15) {
     const sign = minutes < 0 ? "-" : "+";
     const abs = Math.abs(minutes);
     values.push(`${sign}${pad2(Math.floor(abs / 60))}:${pad2(abs % 60)}`);
