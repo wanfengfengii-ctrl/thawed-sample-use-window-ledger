@@ -59,8 +59,12 @@ services:
     environment:
       API_BASE_URL: http://api:8000
       PLAYWRIGHT_BASE_URL: http://web:80
-      # pytest exercises the real FastAPI app against the real PostgreSQL.
-      DATABASE_URL: postgresql+psycopg://thaw:thawpass@db:5432/thaw
+      # pytest runs against a DEDICATED database it may freely drop/recreate.
+      # It must never point at "thaw", which the API keeps serving during the
+      # later Playwright phase.
+      DATABASE_URL: postgresql+psycopg://thaw:thawpass@db:5432/thaw_verify
+      TEST_DATABASE_NAME: thaw_verify
+      PG_ADMIN_URL: postgresql://thaw:thawpass@db:5432/postgres
     depends_on:
       db:
         condition: service_healthy

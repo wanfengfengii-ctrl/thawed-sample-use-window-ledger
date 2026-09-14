@@ -50,7 +50,7 @@ WEB_PORT=9090 API_PORT=9000 docker compose up
 
 `verify` 是 one-shot 服务，对真实 Compose 栈跑全部测试：
 
-- **pytest**：规则引擎单测 + FastAPI 联调（真实 PostgreSQL；验收库为专用库，逐例重建表）；
+- **pytest**：规则引擎单测 + FastAPI 联调（真实 PostgreSQL）。pytest 连**专用库 `thaw_verify`**（由 `verify/run-tests.sh` 自动创建）并自由 drop/recreate 表；它不会触碰 API 正在服务的 `thaw` 库，因此 pytest 结束后浏览器阶段的提交与查询依然正常；
 - **Vitest**：格式化/拼装与 React 组件交互；
 - **Playwright**：真实 Chromium 经 `web(nginx) → api(FastAPI) → db(PostgreSQL)` 联调。
 
